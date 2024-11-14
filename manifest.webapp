@@ -1,0 +1,13 @@
+{
+  "name": "StringArtVocale",
+  "description": "Sintetizzatore vocale per string art",
+  "launch_path": "/index.html",
+  "icons": {
+    "512": "/img/ws512.png",
+    "128": "/img/ws128.png"
+  },
+  "developer": {
+    "name": "Andreana Felicione"    
+  },
+  "default_locale": "it"
+}
