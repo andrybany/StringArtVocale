@@ -1,114 +1,52 @@
+//https://www.alebalweb-blog.com/85-text-to-speech-player-with-buttons-play-pause-stop-and-voice-choice.html
+
 const synth = window.speechSynthesis;
 
 const inputForm = document.querySelector("form");
-const inputTxt = document.querySelector(".txt");
-const voiceSelect = document.querySelector("select");
+const pauseButton = document.querySelector("#pause");
 
-const pitch = document.querySelector("#pitch");
-const pitchValue = document.querySelector(".pitch-value");
-const rate = document.querySelector("#rate");
-const rateValue = document.querySelector(".rate-value");
+let currentRow = 0;
+let pause = false;
 
-let voices = [];
-
-function populateVoiceList() {
-  voices = synth.getVoices().sort(function (a, b) {
-    const aname = a.name.toUpperCase();
-    const bname = b.name.toUpperCase();
-
-    if (aname < bname) {
-      return -1;
-    } else if (aname == bname) {
-      return 0;
-    } else {
-      return +1;
-    }
-  });
-  const selectedIndex =
-    voiceSelect.selectedIndex < 0 ? 0 : voiceSelect.selectedIndex;
-  voiceSelect.innerHTML = "";
-
-  for (let i = 0; i < voices.length; i++) {
-    const option = document.createElement("option");
-    option.textContent = `${voices[i].name} (${voices[i].lang})`;
-
-    if (voices[i].default) {
-      option.textContent += " -- DEFAULT";
-    }
-
-    option.setAttribute("data-lang", voices[i].lang);
-    option.setAttribute("data-name", voices[i].name);
-    voiceSelect.appendChild(option);
-  }
-  voiceSelect.selectedIndex = selectedIndex;
-}
-
-populateVoiceList();
-
-if (speechSynthesis.onvoiceschanged !== undefined) {
-  speechSynthesis.onvoiceschanged = populateVoiceList;
-}
-
-function readTextFile(file) {  
-  fetch(file)
-  .then((res) => res.text())
-  .then((text) => {
-    // do something with "text"
-    console.log(text);
-   })
-  .catch((e) => console.error(e));
-}
-
-function speak() {
+function speak() {    
   if (synth.speaking) {
     console.error("speechSynthesis.speaking");
     return;
   }
+  
+  (async () => {
+    const response = await fetch("https://raw.githubusercontent.com/andrybany/StringArtVocale/refs/heads/main/assets/test.txt");
+    const data = await response.text();
+    const lines = data.split("\n");  
+    for (let index = currentRow; index < lines.length; index++) {
+      console.log(pause);
+      const element = lines[index];                        
+      if (element !== "") {        
+        const utterThis = new SpeechSynthesisUtterance(element);
+        
+        utterThis.onend = function (event) {
+          console.log("SpeechSynthesisUtterance.onend");
+        };
 
-  //readTextFile('assets/nail_seq.txt');
-  readTextFile("file:///C:/MyProjects/StringArtVocale/nail_seq.txt");
-  // if (inputTxt.value !== "") {
-  //   const utterThis = new SpeechSynthesisUtterance(inputTxt.value);
+        utterThis.onerror = function (event) {          
+          console.error("SpeechSynthesisUtterance.onerror");
+          console.log(event);
+        };
 
-  //   utterThis.onend = function (event) {
-  //     console.log("SpeechSynthesisUtterance.onend");
-  //   };
-
-  //   utterThis.onerror = function (event) {
-  //     console.error("SpeechSynthesisUtterance.onerror");
-  //   };
-
-  //   const selectedOption =
-  //     voiceSelect.selectedOptions[0].getAttribute("data-name");
-
-  //   for (let i = 0; i < voices.length; i++) {
-  //     if (voices[i].name === selectedOption) {
-  //       utterThis.voice = voices[i];
-  //       break;
-  //     }
-  //   }
-  //   utterThis.pitch = pitch.value;
-  //   utterThis.rate = rate.value;
-  //   synth.speak(utterThis);
-  // }
+        utterThis.voice = synth.getVoices().find(x => x.lang === "it-IT");
+        synth.speak(utterThis);
+        currentRow++;
+      }      
+    };
+  })(); 
 }
 
 inputForm.onsubmit = function (event) {  
   event.preventDefault();
-
-  speak();
-
-  inputTxt.blur();
+  speak();  
 };
 
-pitch.onchange = function () {
-  pitchValue.textContent = pitch.value;
-};
-
-rate.onchange = function () {
-  rateValue.textContent = rate.value;
-};
-
-voiceSelect.onchange = function () {
-  speak();
-};
+pauseButton.onclick = function () {      
+  pause = true;
+  //synth.cancel();
+}
